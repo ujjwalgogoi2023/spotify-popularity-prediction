@@ -36,6 +36,7 @@ TEST_LR = {l: test_reg[(test_reg.features == l) & (test_reg.model == "Linear Reg
 GENRE_IMP = perm["track_genre"]
 AUDIO_TOP = perm.drop(["track_genre", "n_genres"]).sort_values().index[-1]
 RATIO = GENRE_IMP / perm[AUDIO_TOP]
+SEED = _csv("results_seed_variance.csv").groupby("features").R2.agg(["mean", "std"])
 EXT = external.loc["all decades"]
 EXT_DEC = external.drop("all decades")
 
@@ -104,20 +105,15 @@ pd.set_option("display.width", 200)
 
 RANDOM_STATE = 42"""),
 
-md("## 1. Data acquisition\n\nDownloaded from the HuggingFace mirror (BSD licence). Runs once."),
+md("""## 1. Data acquisition
 
-code("""from pathlib import Path
-import urllib.request
+Downloaded once from the HuggingFace mirror (BSD licence), pinned to the revision the study
+used and checked against its SHA-256 (`data_prep.download_raw`)."""),
 
-RAW = Path("../data/raw/dataset.csv")
-URL = ("https://huggingface.co/datasets/maharshipandya/"
-       "spotify-tracks-dataset/resolve/main/dataset.csv")
+code("""from data_prep import download_raw, load_raw
 
-if not RAW.exists():
-    RAW.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(URL, RAW)
-
-raw = pd.read_csv(RAW, index_col=0)
+download_raw()
+raw = load_raw()
 print(f"shape: {raw.shape}")
 raw.head(3)"""),
 
@@ -226,7 +222,7 @@ contribution of genre context is directly measurable. All preprocessing sits ins
 
 Settings were chosen by cross-validated search **inside `train.csv` only** (`src/tuning.py`:
 grid search for the regularisation strengths, randomised search for the tree ensembles, 3-fold
-CV). Validation and test data were never loaded during the search. It takes about an hour, so
+CV). Validation and test data were never loaded during the search. It takes about 20 minutes, so
 it is not re-run here; its output is loaded below and every model in this notebook uses it."""),
 
 code("""import json
@@ -465,6 +461,23 @@ gb = regression_models(cols, load_best_params("regression", "audio+genre"))["Gra
 r2s = shuffle_check(gb, train[cols], train.popularity, val[cols], val.popularity)
 print(f"shuffled-target R2 = {r2s:.5f}  ->  "
       f"{'PASS' if abs(r2s) < 0.02 else 'FAIL - LEAKAGE'}")"""),
+
+md("""### 7.3 Verification: seed variance
+
+`src/run_seed_variance.py` refits the tuned Random Forest on five train/validation partitions
+(seeds 42, 1–4). Only the 85% pool shared by train and validation is re-partitioned; the test
+set stays fixed and is not scored again. Refitting takes several minutes, so its output is
+loaded here."""),
+
+code("""seeds = pd.read_csv("../data/processed/results_seed_variance.csv")
+display(seeds)
+seeds.groupby("features").R2.agg(["mean", "std"]).round(4)"""),
+
+md(f"""Validation R2 is **{SEED.loc['audio only', 'mean']:.3f} ± {SEED.loc['audio only', 'std']:.3f}**
+audio only and **{SEED.loc['audio+genre', 'mean']:.3f} ± {SEED.loc['audio+genre', 'std']:.3f}**
+audio + genre (mean ± SD). The gain from genre, about
+{SEED.loc['audio+genre', 'mean'] - SEED.loc['audio only', 'mean']:.2f}, is far larger than the
+seed-to-seed spread."""),
 
 md("""## 8. External validation and the era confound
 

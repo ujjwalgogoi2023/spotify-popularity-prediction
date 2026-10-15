@@ -84,7 +84,14 @@ used: `data_prep.py` fetches `dataset.csv` from the HuggingFace mirror pinned to
 4TU (MD5 checked). Downloads retry with backoff on rate limits and server errors.
 
 ```bash
-python src/data_prep.py && python src/tuning.py && python src/run_regression.py && python src/run_classification.py && python src/run_interpretation.py && python src/run_shap.py && python src/run_final_test.py && python src/external_data.py && python src/run_external.py && python src/make_notebook.py
+python src/data_prep.py && python src/tuning.py && python src/run_regression.py && python src/run_classification.py && python src/run_interpretation.py && python src/run_shap.py && python src/run_final_test.py && python src/external_data.py && python src/run_external.py && python src/run_seed_variance.py && python src/make_notebook.py
+```
+
+`make_notebook.py` writes the notebook without outputs. Execute it to reproduce the committed
+copy:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 notebooks/spotify_popularity_analysis.ipynb
 ```
 
 ```bash
@@ -96,7 +103,7 @@ deduplication and feature engineering, the external overlap removal, and the dow
 retry and checksum logic (offline); tests that need the downloaded data skip when it is
 absent.
 
-`tuning.py` is the slow step (roughly an hour on a 16-core laptop). Every later script falls
+`tuning.py` is the slow step (about 20 minutes on a 16-core laptop). Every later script falls
 back to hand-set defaults if `best_params.json` is absent.
 
 | Script | Purpose |
@@ -106,13 +113,13 @@ back to hand-set defaults if `best_params.json` is absent.
 | `src/tuning.py` | Randomised/grid CV search inside `train.csv` only → `best_params.json` |
 | `src/run_regression.py` | RQ1/RQ3 — regression across both feature sets, plus the shuffle check |
 | `src/run_classification.py` | RQ4 — binary framing at two thresholds |
-| `src/run_interpretation.py` | EDA figures, VIF, permutation importance |
+| `src/run_interpretation.py` | EDA figures and VIF |
 | `src/run_shap.py` | SHAP summary (isolated — `TreeExplainer` is the slow step) |
-| `src/run_final_test.py` | Single held-out test evaluation of the validation-selected models, plus confusion matrices |
+| `src/run_final_test.py` | Single held-out test evaluation of the validation-selected models, plus confusion matrices and test-set permutation importance (table and figures) |
 | `src/external_data.py` | Downloads (MD5-checked) and prepares the Hit Predictor dataset, removing tracks shared with the primary set |
 | `src/run_external.py` | External transfer test and the era-confound measurements |
 | `src/run_seed_variance.py` | Validation R² of the tuned Random Forest across five train/validation seeds |
-| `src/make_notebook.py` | Regenerates the notebook from source |
+| `src/make_notebook.py` | Regenerates the notebook from source (unexecuted; see above) |
 
 ## Leakage controls
 

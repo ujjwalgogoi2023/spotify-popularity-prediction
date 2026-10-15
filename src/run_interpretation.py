@@ -1,22 +1,18 @@
-"""EDA + interpretation figures for the report."""
+"""EDA figures (01-05) and the VIF table for the report."""
 import sys, warnings
 warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt, seaborn as sns
 sys.path.insert(0, "src")
-from data_prep import load_raw, build, split, feature_columns, AUDIO_FEATURES
-from models import make_preprocessor, RANDOM_STATE
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.inspection import permutation_importance
+from data_prep import load_raw, build, AUDIO_FEATURES
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 sns.set_theme(style="whitegrid"); plt.rcParams["figure.dpi"] = 140
 FIG = "figures"
 
 raw = load_raw()
-df  = build(); tr, va, te = split(df)
+df  = build()
 
 # --- F1: duplicate structure -------------------------------------------------
 vc = raw.track_id.value_counts()
@@ -67,32 +63,6 @@ vif = vif.sort_values("VIF", ascending=False)
 print("=== VIF (multicollinearity) ===\n" + vif.round(2).to_string(index=False))
 vif.to_csv("data/processed/vif.csv", index=False)
 
-# --- Permutation importance (audio only + audio+genre) -----------------------
-for label, inc, fname in [("audio only", False, "06_permutation_audio.png"),
-                          ("audio+genre", True, "07_permutation_genre.png")]:
-    cols = feature_columns(include_genre=inc)
-    mdl = Pipeline([("pre", make_preprocessor(cols)),
-                    ("m", RandomForestRegressor(n_estimators=200, min_samples_leaf=5,
-                         n_jobs=-1, random_state=RANDOM_STATE))]).fit(tr[cols], tr.popularity)
-    sub = va.sample(4000, random_state=RANDOM_STATE)
-    pi = permutation_importance(mdl, sub[cols], sub.popularity, n_repeats=5,
-                                random_state=RANDOM_STATE, n_jobs=-1)
-    imp = pd.Series(pi.importances_mean, index=cols).sort_values()
-    fig, ax = plt.subplots(figsize=(8, 5))
-    imp.plot.barh(ax=ax, color="#4C72B0", xerr=pd.Series(pi.importances_std, index=cols).loc[imp.index])
-    ax.set(title=f"Permutation importance — {label}", xlabel="drop in R² when shuffled")
-    plt.tight_layout(); plt.savefig(f"{FIG}/{fname}", bbox_inches="tight"); plt.close()
-    print(f"\n=== Permutation importance ({label}) — top 6 ===")
-    print(imp.sort_values(ascending=False).head(6).round(4).to_string())
-
-# --- SHAP on the audio-only model (interpretable without 114 genre dummies) ---
-import shap
-cols = feature_columns(include_genre=False)
-rf = RandomForestRegressor(n_estimators=150, min_samples_leaf=5, n_jobs=-1,
-                           random_state=RANDOM_STATE).fit(tr[cols], tr.popularity)
-sample = va[cols].sample(1500, random_state=RANDOM_STATE)
-sv = shap.TreeExplainer(rf).shap_values(sample)
-shap.summary_plot(sv, sample, show=False, plot_size=(8,5))
-plt.title("SHAP — audio features only", fontsize=11)
-plt.tight_layout(); plt.savefig(f"{FIG}/08_shap_summary.png", bbox_inches="tight"); plt.close()
+# Permutation importance (figures 06-07) is computed on the test set by run_final_test.py,
+# and the SHAP summary (figure 08) by run_shap.py, so each figure matches its table.
 print("\nfigures written to figures/")

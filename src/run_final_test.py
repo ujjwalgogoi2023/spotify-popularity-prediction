@@ -101,3 +101,11 @@ for label, inc in FEATURE_SETS:
     imp = pd.Series(pi.importances_mean, index=cols).sort_values(ascending=False)
     print(f"\n--- {label} ({name}) ---"); print(imp.head(8).round(4).to_string())
     imp.to_csv(f"{OUT}/perm_importance_{'genre' if inc else 'audio'}.csv")
+    # Figures are drawn from these same scores, so they always match the reported tables.
+    std = pd.Series(pi.importances_std, index=cols)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    imp[::-1].plot.barh(ax=ax, color="#4C72B0", xerr=std.loc[imp.index[::-1]])
+    ax.set(title=f"Permutation importance (test set) — {label}, {name}",
+           xlabel="drop in R² when shuffled")
+    fname = "07_permutation_genre.png" if inc else "06_permutation_audio.png"
+    plt.tight_layout(); plt.savefig(f"figures/{fname}", bbox_inches="tight"); plt.close()

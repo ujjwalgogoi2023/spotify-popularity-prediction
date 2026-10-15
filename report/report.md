@@ -200,6 +200,20 @@ test set. The hurdle model edges out plain Gradient Boosting, but by little.
 | audio+genre | Linear Regression | 0.324 | 0.323 | 16.97 | 12.16 |
 | audio+genre | **Random Forest** | **0.501** | 0.500 | 14.58 | 9.92 |
 
+**Seed variance.** To check that these figures are not an accident of one partition, the tuned
+Random Forest was refitted on five train/validation partitions (seeds 42, 1–4;
+`src/run_seed_variance.py`). Only the 85% pool shared by train and validation was
+re-partitioned, at the same sizes and strata; the test set stayed fixed and was not scored
+again.
+
+| Features | Validation R² (mean ± SD, 5 seeds) | Range |
+|---|---|---|
+| audio only | 0.250 ± 0.013 | 0.232–0.267 |
+| audio+genre | 0.498 ± 0.009 | 0.491–0.513 |
+
+The gain from genre (about 0.25) is roughly twenty times the seed-to-seed spread, and the
+single-split validation scores in §6.1 (0.255, 0.499) sit inside both ranges.
+
 ### 6.3 Sensitivity: excluding zero-popularity tracks
 
 | Features | Model | R² |
@@ -265,12 +279,14 @@ matter, though not on their exact order:
 | 3 | `log_duration` (0.090) | `log_acousticness` (1.30) |
 | 4 | `log_acousticness` (0.088) | `log_duration` (1.09) |
 
+![Permutation importance, audio only](../figures/06_permutation_audio.png)
+
 ![SHAP summary](../figures/08_shap_summary.png)
 
 The four permutation scores lie within 0.01 of each other, so their order is not meaningful;
 the set is. Direction (RQ2): instrumentalness and acousticness both push predicted popularity
 **down** — vocal, produced tracks score higher. Key and mode are effectively inert (SHAP 0.05
-for key, 0.11 for mode; permutation ≤ 0.003), which is worth stating plainly: **the musical
+for key, 0.11 for mode; permutation below 0.004), which is worth stating plainly: **the musical
 key of a song carries no information about its popularity.** Tempo and time signature are
 similarly minor.
 
@@ -401,16 +417,20 @@ enough to make the pipeline reproducible on fresh audio.
 ## Appendix — Reproduction
 
 ```bash
-pip install pandas scikit-learn matplotlib seaborn statsmodels lightgbm shap jupyterlab
-python src/data_prep.py           # dedup, clean, engineer, split
+pip install -r requirements.txt   # pinned versions the results were produced with
+python src/data_prep.py           # download (SHA-256-checked), dedup, clean, engineer, split
 python src/tuning.py              # CV hyperparameter search inside train.csv (slow step)
 python src/run_regression.py      # RQ1, RQ3 + shuffle check
 python src/run_classification.py  # RQ4
-python src/run_interpretation.py  # EDA + VIF + permutation figures
+python src/run_interpretation.py  # EDA figures + VIF
 python src/run_shap.py            # SHAP summary
-python src/run_final_test.py      # held-out test evaluation + confusion matrices
+python src/run_final_test.py      # held-out test evaluation, confusion matrices, permutation importance
 python src/external_data.py       # download (MD5-checked) and prepare Hit Predictor
 python src/run_external.py        # external transfer + era-confound measurements
+python src/run_seed_variance.py   # validation R² across five train/validation seeds
+python src/make_notebook.py       # regenerate the notebook, then execute it:
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 notebooks/spotify_popularity_analysis.ipynb
+python -m pytest tests            # split sizes, leakage, feature engineering, download checks
 ```
 
 **Verification performed**
@@ -424,3 +444,5 @@ python src/run_external.py        # external transfer + era-confound measurement
 | Tuning reads `train.csv` only | **PASS** (`tuning.py` never loads validation or test) |
 | No external track shared with the primary dataset | **PASS** (3,100 removed by ID and by artist + title) |
 | `random_state = 42` throughout | **PASS** |
+| Results stable across train/validation seeds | **PASS** (R² SD 0.013 audio only, 0.009 audio+genre) |
+| Pipeline reruns reproduce the committed results | **PASS** (full rerun from the raw file, tuning included; identical splits, tuned settings and results) |
