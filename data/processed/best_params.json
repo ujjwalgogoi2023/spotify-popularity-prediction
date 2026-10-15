@@ -1,0 +1,80 @@
+{
+  "regression": {
+    "audio only": {
+      "Ridge": {
+        "alpha": 316.22776601683796
+      },
+      "Lasso": {
+        "alpha": 0.03162277660168379
+      },
+      "Random Forest": {
+        "min_samples_leaf": 1,
+        "max_features": 0.5,
+        "max_depth": null
+      },
+      "Gradient Boosting": {
+        "min_samples_leaf": 10,
+        "max_leaf_nodes": 127,
+        "max_iter": 300,
+        "learning_rate": 0.03,
+        "l2_regularization": 1.0
+      }
+    },
+    "audio+genre": {
+      "Ridge": {
+        "alpha": 3.1622776601683795
+      },
+      "Lasso": {
+        "alpha": 0.001
+      },
+      "Random Forest": {
+        "min_samples_leaf": 1,
+        "max_features": 0.33,
+        "max_depth": null
+      },
+      "Gradient Boosting": {
+        "min_samples_leaf": 10,
+        "max_leaf_nodes": 127,
+        "max_iter": 300,
+        "learning_rate": 0.08,
+        "l2_regularization": 1.0
+      }
+    }
+  },
+  "classification": {
+    "audio only": {
+      "Logistic Regression": {
+        "C": 0.001
+      },
+      "Random Forest": {
+        "min_samples_leaf": 10,
+        "max_features": 0.5,
+        "max_depth": 30
+      },
+      "Gradient Boosting": {
+        "min_samples_leaf": 10,
+        "max_leaf_nodes": 127,
+        "max_iter": 300,
+        "learning_rate": 0.03,
+        "l2_regularization": 1.0
+      }
+    },
+    "audio+genre": {
+      "Logistic Regression": {
+        "C": 100.0
+      },
+      "Random Forest": {
+        "min_samples_leaf": 1,
+        "max_features": 0.5,
+        "max_depth": null
+      },
+      "Gradient Boosting": {
+        "min_samples_leaf": 10,
+        "max_leaf_nodes": 127,
+        "max_iter": 300,
+        "learning_rate": 0.03,
+        "l2_regularization": 1.0
+      }
+    }
+  }
+}

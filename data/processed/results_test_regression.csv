@@ -1,0 +1,7 @@
+features,model,selected,R2,RMSE,MAE,Adj_R2
+audio only,Mean baseline,False,-0.0,20.6365,17.3086,-0.0011
+audio only,Linear Regression,False,0.0344,20.278,16.7207,0.0334
+audio only,Random Forest,True,0.2662,17.6773,13.5729,0.2654
+audio+genre,Mean baseline,False,-0.0,20.6365,17.3086,-0.0013
+audio+genre,Linear Regression,False,0.3235,16.9737,12.1605,0.3226
+audio+genre,Random Forest,True,0.5009,14.5789,9.9151,0.5003

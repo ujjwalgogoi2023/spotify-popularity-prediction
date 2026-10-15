@@ -1,0 +1,27 @@
+test,variant,value
+B1 drift 1960s->2010s (SD units),loudness,0.8045
+B1 drift 1960s->2010s (SD units),energy,0.8833
+B1 drift 1960s->2010s (SD units),acousticness,-1.1742
+B1 drift 1960s->2010s (SD units),danceability,0.3978
+B1 drift 1960s->2010s (SD units),valence,-0.4883
+B1 drift 1960s->2010s (SD units),log_duration,0.7047
+B2 decade from audio (5-fold CV R2),Gradient Boosting,0.5199
+B3 hit AUC (5-fold CV),"Logistic Regression, audio",0.8011
+B3 hit AUC (5-fold CV),"Logistic Regression, audio+decade",0.8083
+B3 AUC gain from decade,Logistic Regression,0.0073
+B3 hit AUC (5-fold CV),"Gradient Boosting, audio",0.8698
+B3 hit AUC (5-fold CV),"Gradient Boosting, audio+decade",0.8942
+B3 AUC gain from decade,Gradient Boosting,0.0244
+B4 hit AUC by decade,1960 random CV,0.8414
+B4 hit AUC by decade,1960 decade held out,0.7764
+B4 hit AUC by decade,1970 random CV,0.8435
+B4 hit AUC by decade,1970 decade held out,0.8208
+B4 hit AUC by decade,1980 random CV,0.8591
+B4 hit AUC by decade,1980 decade held out,0.8363
+B4 hit AUC by decade,1990 random CV,0.8958
+B4 hit AUC by decade,1990 decade held out,0.8717
+B4 hit AUC by decade,2000 random CV,0.924
+B4 hit AUC by decade,2000 decade held out,0.9073
+B4 hit AUC by decade,2010 random CV,0.9032
+B4 hit AUC by decade,2010 decade held out,0.8755
+B4 mean AUC lost when decade unseen,Gradient Boosting,0.0298

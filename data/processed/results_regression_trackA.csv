@@ -1,0 +1,15 @@
+features,model,R2,RMSE,MAE
+audio only,Mean baseline,-0.0,20.579,17.238
+audio only,Linear Regression,0.0366,20.199,16.642
+audio only,Ridge,0.0365,20.2,16.645
+audio only,Lasso,0.0365,20.201,16.653
+audio only,Random Forest,0.2546,17.768,13.642
+audio only,Gradient Boosting,0.1877,18.547,14.805
+audio only,Hurdle (2-stage),0.2001,18.405,14.622
+audio+genre,Mean baseline,-0.0,20.579,17.238
+audio+genre,Linear Regression,0.3367,16.76,12.012
+audio+genre,Ridge,0.3367,16.76,12.023
+audio+genre,Lasso,0.3368,16.759,12.026
+audio+genre,Random Forest,0.4989,14.567,9.876
+audio+genre,Gradient Boosting,0.4689,14.998,10.329
+audio+genre,Hurdle (2-stage),0.4705,14.975,10.268
