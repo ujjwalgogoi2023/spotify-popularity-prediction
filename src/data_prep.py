@@ -12,6 +12,10 @@ Handles the two structural hazards in the raw dataset:
    evidence of regional availability gaps at scrape time, not of unpopular songs.
 """
 
+import hashlib
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +28,14 @@ PROCESSED = ROOT / "data" / "processed"
 
 RANDOM_STATE = 42
 
+# HuggingFace mirror of the Spotify Tracks Dataset, pinned to the revision the study used.
+RAW_URL = ("https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset/"
+           "resolve/635b034f69257814eff850a5c2b3346fe458134f/dataset.csv")
+RAW_SHA256 = "b202fa49909b2d5cef71a04b1d21243cfeb36414535f2ca9272aa646721177bd"
+
+USER_AGENT = "spotify-popularity-prediction (course project; urllib)"
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
 # The 11 audio features Spotify exposed, plus the two track descriptors that are
 # intrinsic to the recording rather than to its marketing.
 AUDIO_FEATURES = [
@@ -34,6 +46,47 @@ AUDIO_FEATURES = [
 
 # Heavily right-skewed on inspection; log1p pulls them toward symmetry.
 SKEWED = ["speechiness", "instrumentalness", "liveness", "acousticness"]
+
+
+def fetch(url: str, attempts: int = 4, backoff: float = 5.0, timeout: int = 60) -> bytes:
+    """GET `url`, retrying rate limits, server errors and dropped connections.
+
+    Data hosts throttle the default urllib client (4TU answered a first request with
+    429), so requests carry an explicit User-Agent and wait between tries -- for as long
+    as `Retry-After` asks when the server says, otherwise 5, 15, 45 s.
+    """
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            if e.code not in RETRY_STATUS or attempt == attempts:
+                raise
+            retry_after = e.headers.get("Retry-After", "") if e.headers else ""
+            wait = float(retry_after) if retry_after.isdigit() else backoff * 3 ** (attempt - 1)
+            reason = f"HTTP {e.code}"
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt == attempts:
+                raise
+            wait, reason = backoff * 3 ** (attempt - 1), type(e).__name__
+        print(f"  {reason}; retrying in {wait:.0f}s ({attempt}/{attempts - 1})")
+        time.sleep(wait)
+    raise AssertionError("unreachable")
+
+
+def download_raw() -> None:
+    """Fetch the raw CSV once and verify it byte-for-byte against the study's copy."""
+    if RAW.exists():
+        print(f"already present: {RAW}")
+        return
+    blob = fetch(RAW_URL)
+    digest = hashlib.sha256(blob).hexdigest()
+    if digest != RAW_SHA256:
+        raise ValueError(f"SHA-256 mismatch: got {digest}, expected {RAW_SHA256}")
+    RAW.parent.mkdir(parents=True, exist_ok=True)
+    RAW.write_bytes(blob)
+    print(f"downloaded: {RAW}")
 
 
 def load_raw() -> pd.DataFrame:
@@ -154,6 +207,7 @@ def split(df: pd.DataFrame, random_state: int = RANDOM_STATE):
 
 
 if __name__ == "__main__":
+    download_raw()
     PROCESSED.mkdir(parents=True, exist_ok=True)
 
     raw = load_raw()

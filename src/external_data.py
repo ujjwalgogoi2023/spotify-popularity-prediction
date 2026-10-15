@@ -14,13 +14,12 @@ Two things it offers that the primary dataset cannot:
 import hashlib
 import io
 import sys
-import urllib.request
 import zipfile
 from pathlib import Path
 
 import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data_prep import PROCESSED, ROOT, engineer_audio, load_raw
+from data_prep import PROCESSED, ROOT, engineer_audio, fetch, load_raw
 
 URL = ("https://data.4tu.nl/file/a3094315-d0d6-4326-8194-1536c709fa93/"
        "127746a2-5dbd-4f7c-a067-1d8b82869cbd")
@@ -37,7 +36,7 @@ def download() -> None:
     if any(EXTERNAL.glob("*.csv")):
         print(f"already present: {EXTERNAL}")
         return
-    blob = urllib.request.urlopen(URL, timeout=60).read()
+    blob = fetch(URL)
     digest = hashlib.md5(blob).hexdigest()
     if digest != MD5:
         raise ValueError(f"MD5 mismatch: got {digest}, expected {MD5}")

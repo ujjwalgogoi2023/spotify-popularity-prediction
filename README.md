@@ -78,6 +78,11 @@ report/report.md   the written report
 pip install -r requirements.txt
 ```
 
+Both datasets are downloaded on first run and checked against the exact files the study
+used: `data_prep.py` fetches `dataset.csv` from the HuggingFace mirror pinned to revision
+`635b034f` (SHA-256 checked), and `external_data.py` fetches the Hit Predictor archive from
+4TU (MD5 checked). Downloads retry with backoff on rate limits and server errors.
+
 ```bash
 python src/data_prep.py && python src/tuning.py && python src/run_regression.py && python src/run_classification.py && python src/run_interpretation.py && python src/run_shap.py && python src/run_final_test.py && python src/external_data.py && python src/run_external.py && python src/make_notebook.py
 ```
@@ -87,15 +92,16 @@ python -m pytest tests
 ```
 
 The test suite (under a minute) checks the split sizes and leakage guarantees, the
-deduplication and feature engineering, and the external overlap removal; tests that need
-the downloaded data skip when it is absent.
+deduplication and feature engineering, the external overlap removal, and the download
+retry and checksum logic (offline); tests that need the downloaded data skip when it is
+absent.
 
 `tuning.py` is the slow step (roughly an hour on a 16-core laptop). Every later script falls
 back to hand-set defaults if `best_params.json` is absent.
 
 | Script | Purpose |
 |---|---|
-| `src/data_prep.py` | Deduplication, cleaning, feature engineering, stratified split with leakage assertions |
+| `src/data_prep.py` | Raw download (SHA-256-checked), deduplication, cleaning, feature engineering, stratified split with leakage assertions |
 | `src/models.py` | Model definitions, tuned-parameter loading, the two-stage hurdle regressor, evaluation helpers |
 | `src/tuning.py` | Randomised/grid CV search inside `train.csv` only → `best_params.json` |
 | `src/run_regression.py` | RQ1/RQ3 — regression across both feature sets, plus the shuffle check |
