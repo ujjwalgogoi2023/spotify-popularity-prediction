@@ -1,0 +1,11 @@
+seed,features,model,n_train,n_val,R2,RMSE,MAE
+42,audio only,Random Forest,62704,13437,0.2546,17.7677,13.6425
+42,audio+genre,Random Forest,62704,13437,0.4989,14.5675,9.8758
+1,audio only,Random Forest,62704,13437,0.2462,17.9051,13.7335
+1,audio+genre,Random Forest,62704,13437,0.4943,14.6661,9.9784
+2,audio only,Random Forest,62704,13437,0.2673,17.5995,13.506
+2,audio+genre,Random Forest,62704,13437,0.5131,14.3474,9.7739
+3,audio only,Random Forest,62704,13437,0.2316,18.0234,13.7496
+3,audio+genre,Random Forest,62704,13437,0.4906,14.6745,9.913
+4,audio only,Random Forest,62704,13437,0.2524,17.7921,13.5948
+4,audio+genre,Random Forest,62704,13437,0.4931,14.6501,9.8562

@@ -1,0 +1,14 @@
+# Versions the reported results were produced with (Python 3.11, Windows).
+numpy==2.4.3
+pandas==3.0.1
+scipy==1.17.1
+scikit-learn==1.8.0
+statsmodels==0.14.6
+shap==0.51.0
+matplotlib==3.11.1
+seaborn==0.13.2
+reportlab==5.0.0
+jupyterlab==4.6.3
+nbconvert==7.17.1
+ipykernel==7.3.0
+pytest==9.1.1
